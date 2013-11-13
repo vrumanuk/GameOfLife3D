@@ -1,12 +1,13 @@
-////////////////////////////////////////////////////          
+////////////////////////////////////////////////////
 // square.cpp
 //
 // Stripped down OpenGL program that draws a square.
-// 
+//
 // Sumanta Guha.
 ////////////////////////////////////////////////////
 
 #include <iostream>
+#include <stdio.h>
 #include <cmath>
 
 #ifdef __APPLE__
@@ -17,12 +18,12 @@
 
 using namespace std;
 
-const int X_MAX = 50;
-const int Y_MAX = 50;
+const int X_MAX = 100;
+const int Y_MAX = 100;
 
 bool isStepping = 0;
 unsigned char activeBoard = 0;
-
+unsigned char mode = 0;
 // ADD A WAY FOR USERS TO CHANGE THIS
 unsigned int stepPeriod = 400;
 unsigned int maxStepPeriod = 5000;
@@ -43,13 +44,53 @@ unsigned char minimumSurvive = 2;
 unsigned char maximumForLife = 3;
 
 unsigned char colors[2][X_MAX][Y_MAX][3];
-
-
+unsigned char* tex = NULL;
+static unsigned int texture;
 
 int windowWidth = 600;
 int windowHeight = 600;
-float xSquares = 10;
-float ySquares = 10;
+unsigned int xSquares = 10;
+unsigned int ySquares = 10;
+unsigned int TEX_SQUARE_WIDTH = 4;
+void fillTex()
+{
+  unsigned int tex_size = TEX_SQUARE_WIDTH*TEX_SQUARE_WIDTH*xSquares*ySquares*3;
+  unsigned int tex_width = TEX_SQUARE_WIDTH*xSquares*3;
+  unsigned int tex_height = TEX_SQUARE_WIDTH*ySquares;
+
+  if(tex == NULL)
+    {
+      tex = (unsigned char*)malloc(tex_size);
+    }
+  else if(sizeof(tex) != tex_size)
+    {
+      free(tex);
+      tex = (unsigned char*)malloc(tex_size);
+    }
+  int i,j,k;
+  for(i=0; i<TEX_SQUARE_WIDTH*ySquares; ++i)
+    {
+      for(j=0; j<TEX_SQUARE_WIDTH*xSquares; ++j)
+	{
+	  for(k=0; k<3; ++k)
+	    {
+	      tex[i*tex_width+j*3+k]=colors[activeBoard][i/TEX_SQUARE_WIDTH][j/TEX_SQUARE_WIDTH][k];
+	    }
+	}
+    }
+
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+  //Not sure what's up with this line. If it's uncommented it causes
+  //a black screen you can't get back from if you ever set mode=1.
+  
+  //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 64/*TEX_SQUARE_WIDTH*xSquares*/, 64/*TEX_SQUARE_WIDTH*ySquares*/, 0, GL_RGB, GL_UNSIGNED_BYTE, tex);
+}
 
 void copyCell(int cellX, int cellY)
 {
@@ -201,19 +242,33 @@ void drawScene(void)
    // Set foreground (or drawing) color.
    glColor3f(1.0, 1.0, 1.0);
 
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   // Draw a polygon with specified vertices.
-
-   for(int i = 0; i < xSquares; i++)
+   if(mode == 0)
+     {
+       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+       // Draw a polygon with specified vertices.
+       
+       for(int i = 0; i < xSquares; i++)
+	 {
+	   for(int j = 0; j < ySquares; j++)
+	     {
+	       glColor3ub(255-colors[activeBoard][i][j][0], 255-colors[activeBoard][i][j][1], 255-colors[activeBoard][i][j][2]);
+	       glRectf((i*(100/(float)xSquares))+0.2, (j*(100/(float)ySquares))+0.2 , ((i+1)*(100/(float)xSquares))-0.2, ((j+1)*(100/(float)ySquares))-0.2);
+	     }
+	 }
+     }
+   else if(mode == 1)
    {
-      for(int j = 0; j < ySquares; j++)
-      {
-         glColor3ub(255-colors[activeBoard][i][j][0], 255-colors[activeBoard][i][j][1], 255-colors[activeBoard][i][j][2]);
-         glRectf((i*(100/xSquares))+0.2, (j*(100/ySquares))+0.2 , ((i+1)*(100/xSquares))-0.2, ((j+1)*(100/ySquares))-0.2);
-      }
+     fillTex();
+     glBindTexture(GL_TEXTURE_2D, texture);
+
+     glBegin(GL_POLYGON);
+     glTexCoord2f(0.0, 0.0); glVertex3f(-10.0, -10.0, 0.0);
+     glTexCoord2f(1.0, 0.0); glVertex3f(10.0, -10.0, 0.0);
+     glTexCoord2f(1.0, 1.0); glVertex3f(10.0, 10.0, 0.0);
+     glTexCoord2f(0.0, 1.0); glVertex3f(-10.0, 10.0, 0.0);
+     glEnd();
    }
-   // Flush created objects to the screen, i.e., force rendering.
-   glFlush(); 
+   glutSwapBuffers();   
 }
 
 // Initialization routine.
@@ -221,6 +276,9 @@ void setup(void)
 {
    // Set background (or clearing) color.
    glClearColor(0.0, 0.0, 0.0, 0.0); 
+   glGenTextures(1,&texture);
+   glEnable(GL_TEXTURE_2D);
+   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 }
 
 // OpenGL window reshape routine.
@@ -304,14 +362,23 @@ void keyInput(unsigned char key, int x, int y)
          }
       break;
 
-      case 'p':
+   case 'p':
          propogateLife();
          glutPostRedisplay();
       break;
 
-      case ' ':
+   case ' ':
          isStepping = !isStepping;
       break;
+      
+   case '1':
+     mode = 1;
+     drawScene();
+     break;
+   case '0':
+     mode = 0;
+     drawScene();
+     break;
 
    }
 }
@@ -321,8 +388,8 @@ void mouseControl(int button, int state, int x, int y)
 {
    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
    {
-      int cellX = floor(x/(windowWidth/xSquares));
-      int cellY = ySquares - 1 - floor(y/(windowHeight/ySquares));
+     int cellX = floor(x/(windowWidth/(float)xSquares));
+     int cellY = ySquares - 1 - floor(y/(windowHeight/(float)ySquares));
       currentRed = cursorRed;
       currentGreen = cursorGreen;
       currentBlue = cursorBlue;
@@ -389,7 +456,7 @@ void makeMenu(void)
 int main(int argc, char **argv) 
 {  
    glutInit(&argc, argv);
-   glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB); 
+   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB); 
    glutInitWindowSize(windowWidth, windowHeight);
    glutInitWindowPosition(100, 100); 
    glutCreateWindow("Game of Life");
