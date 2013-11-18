@@ -49,9 +49,10 @@ static unsigned int texture;
 
 int windowWidth = 600;
 int windowHeight = 600;
-unsigned int xSquares = 10;
-unsigned int ySquares = 10;
+unsigned int xSquares = 16;
+unsigned int ySquares = 16;
 unsigned int TEX_SQUARE_WIDTH = 4;
+
 void fillTex()
 {
   unsigned int tex_size = TEX_SQUARE_WIDTH*TEX_SQUARE_WIDTH*xSquares*ySquares*3;
@@ -74,7 +75,7 @@ void fillTex()
 	{
 	  for(k=0; k<3; ++k)
 	    {
-	      tex[i*tex_width+j*3+k]=colors[activeBoard][i/TEX_SQUARE_WIDTH][j/TEX_SQUARE_WIDTH][k];
+	      tex[i*tex_width+j*3+k]=255-colors[activeBoard][j/TEX_SQUARE_WIDTH][i/TEX_SQUARE_WIDTH][k];
 	    }
 	}
     }
@@ -83,371 +84,372 @@ void fillTex()
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
   //Not sure what's up with this line. If it's uncommented it causes
   //a black screen you can't get back from if you ever set mode=1.
   
-  //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 64/*TEX_SQUARE_WIDTH*xSquares*/, 64/*TEX_SQUARE_WIDTH*ySquares*/, 0, GL_RGB, GL_UNSIGNED_BYTE, tex);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TEX_SQUARE_WIDTH*xSquares, TEX_SQUARE_WIDTH*ySquares, 0, GL_RGB, GL_UNSIGNED_BYTE, tex);
 }
 
 void copyCell(int cellX, int cellY)
 {
-   colors[(activeBoard+1)%2][cellX][cellY][0] = colors[activeBoard][cellX][cellY][0];
-   colors[(activeBoard+1)%2][cellX][cellY][1] = colors[activeBoard][cellX][cellY][1];
-   colors[(activeBoard+1)%2][cellX][cellY][2] = colors[activeBoard][cellX][cellY][2];
+  colors[(activeBoard+1)%2][cellX][cellY][0] = colors[activeBoard][cellX][cellY][0];
+  colors[(activeBoard+1)%2][cellX][cellY][1] = colors[activeBoard][cellX][cellY][1];
+  colors[(activeBoard+1)%2][cellX][cellY][2] = colors[activeBoard][cellX][cellY][2];
 }
 
 void killCell(int cellX, int cellY)
 {
-   colors[(activeBoard+1)%2][cellX][cellY][0] = 0;
-   colors[(activeBoard+1)%2][cellX][cellY][1] = 0;
-   colors[(activeBoard+1)%2][cellX][cellY][2] = 0; 
+  colors[(activeBoard+1)%2][cellX][cellY][0] = 0;
+  colors[(activeBoard+1)%2][cellX][cellY][1] = 0;
+  colors[(activeBoard+1)%2][cellX][cellY][2] = 0; 
 }
 
 bool cellIsAlive(int cellX, int cellY)
 {
-   return colors[activeBoard][cellX][cellY][0] || colors[activeBoard][cellX][cellY][1] || colors[activeBoard][cellX][cellY][0];
+  return colors[activeBoard][cellX][cellY][0] || colors[activeBoard][cellX][cellY][1] || colors[activeBoard][cellX][cellY][0];
 }
 
 void clickActiveCell(int cellX, int cellY)
 {
-   if(!cellIsAlive(cellX, cellY))
-   {
+  if(!cellIsAlive(cellX, cellY))
+    {
       colors[activeBoard][cellX][cellY][0] = currentRed;
       colors[activeBoard][cellX][cellY][1] = currentGreen;
       colors[activeBoard][cellX][cellY][2] = currentBlue;  
-   }
-   else
-   {
+    }
+  else
+    {
       colors[activeBoard][cellX][cellY][0] = 0;
       colors[activeBoard][cellX][cellY][1] = 0;
       colors[activeBoard][cellX][cellY][2] = 0;  
-   }
+    }
 }
 
 void reviveCell(int cellX, int cellY, int neighbors)
 {
-   int redTotal = 0;
-   int greenTotal = 0;
-   int blueTotal = 0;
-   int tempX = 0;
-   int tempY = 0;
-   for(int i = cellX-1; i <= cellX+1; i++)
-   {
+  int redTotal = 0;
+  int greenTotal = 0;
+  int blueTotal = 0;
+  int tempX = 0;
+  int tempY = 0;
+  for(int i = cellX-1; i <= cellX+1; i++)
+    {
       for(int j = cellY-1; j <= cellY+1; j++)
-      {
-         // avoid counting self
-         if(i==cellX && j==cellY)
+	{
+	  // avoid counting self
+	  if(i==cellX && j==cellY)
             continue;
 
-         // X wrapping
-         if(i >= xSquares)
+	  // X wrapping
+	  if(i >= xSquares)
             tempX = 0;
-         else if(i < 0)
+	  else if(i < 0)
             tempX = xSquares-1;
-         else
+	  else
             tempX = i;
 
-         // Y wrapping
-         if(j >= ySquares)
+	  // Y wrapping
+	  if(j >= ySquares)
             tempY = 0;
-         else if(j < 0)
+	  else if(j < 0)
             tempY = ySquares-1;
-         else
+	  else
             tempY = j;
-         if (cellIsAlive(tempX, tempY))
-         {
-            redTotal+=colors[activeBoard][tempX][tempY][0];
-            greenTotal+=colors[activeBoard][tempX][tempY][1];
-            blueTotal+=colors[activeBoard][tempX][tempY][2];
-         }
-      }
-   }
-   currentRed = redTotal / neighbors;
-   currentGreen = greenTotal / neighbors;
-   currentBlue = blueTotal / neighbors;
-   colors[(activeBoard+1)%2][cellX][cellY][0] = currentRed;
-   colors[(activeBoard+1)%2][cellX][cellY][1] = currentGreen;
-   colors[(activeBoard+1)%2][cellX][cellY][2] = currentBlue; 
+	  if (cellIsAlive(tempX, tempY))
+	    {
+	      redTotal+=colors[activeBoard][tempX][tempY][0];
+	      greenTotal+=colors[activeBoard][tempX][tempY][1];
+	      blueTotal+=colors[activeBoard][tempX][tempY][2];
+	    }
+	}
+    }
+  currentRed = redTotal / neighbors;
+  currentGreen = greenTotal / neighbors;
+  currentBlue = blueTotal / neighbors;
+  colors[(activeBoard+1)%2][cellX][cellY][0] = currentRed;
+  colors[(activeBoard+1)%2][cellX][cellY][1] = currentGreen;
+  colors[(activeBoard+1)%2][cellX][cellY][2] = currentBlue; 
 }
 
 int numberOfLivingNeighbors(int cellX, int cellY)
 {
-   int livingNeighbors = 0;
-   int tempX = 0;
-   int tempY = 0;
-   for(int i = cellX-1; i <= cellX+1; i++)
-   {
+  int livingNeighbors = 0;
+  int tempX = 0;
+  int tempY = 0;
+  for(int i = cellX-1; i <= cellX+1; i++)
+    {
       for(int j = cellY-1; j <= cellY+1; j++)
-      {
-         // avoid counting self
-         if(i==cellX && j==cellY)
+	{
+	  // avoid counting self
+	  if(i==cellX && j==cellY)
             continue;
 
-         // X wrapping
-         if(i >= xSquares)
+	  // X wrapping
+	  if(i >= xSquares)
             tempX = 0;
-         else if(i < 0)
+	  else if(i < 0)
             tempX = xSquares-1;
-         else
+	  else
             tempX = i;
 
-         // Y wrapping
-         if(j >= ySquares)
+	  // Y wrapping
+	  if(j >= ySquares)
             tempY = 0;
-         else if(j < 0)
+	  else if(j < 0)
             tempY = ySquares-1;
-         else
+	  else
             tempY = j;
 
-         if (cellIsAlive(tempX, tempY))
+	  if (cellIsAlive(tempX, tempY))
             livingNeighbors++;
-      }
-   }
-   return livingNeighbors;
+	}
+    }
+  return livingNeighbors;
 }
 
 void propogateLife()
 {
-   for(int i = 0; i < xSquares; i++)
-   {
+  for(int i = 0; i < xSquares; i++)
+    {
       for(int j = 0; j < ySquares; j++)
-      {
-         int cellNeighbors = numberOfLivingNeighbors(i, j);
-         if(!cellIsAlive(i, j) && cellNeighbors >= minimumRevive && cellNeighbors <= maximumForLife)
-         {
-            reviveCell(i, j, cellNeighbors);
-         }
-         else if(cellIsAlive(i, j) && cellNeighbors >= minimumSurvive && cellNeighbors <= maximumForLife)
-         {
-            copyCell(i, j);
-         }
-         else
-         {
-            killCell(i, j);
-         }
-      }
-   }
-   activeBoard = (activeBoard+1)%2;
+	{
+	  int cellNeighbors = numberOfLivingNeighbors(i, j);
+	  if(!cellIsAlive(i, j) && cellNeighbors >= minimumRevive && cellNeighbors <= maximumForLife)
+	    {
+	      reviveCell(i, j, cellNeighbors);
+	    }
+	  else if(cellIsAlive(i, j) && cellNeighbors >= minimumSurvive && cellNeighbors <= maximumForLife)
+	    {
+	      copyCell(i, j);
+	    }
+	  else
+	    {
+	      killCell(i, j);
+	    }
+	}
+    }
+  activeBoard = (activeBoard+1)%2;
 }
 
 // Drawing (display) routine.
 void drawScene(void)
 {
-   // Clear screen to background color.
-   glClear(GL_COLOR_BUFFER_BIT);
+  // Clear screen to background color.
+  glClear(GL_COLOR_BUFFER_BIT);
 
-   // Set foreground (or drawing) color.
-   glColor3f(1.0, 1.0, 1.0);
+  // Set foreground (or drawing) color.
+  glColor3f(1.0, 1.0, 1.0);
 
-   if(mode == 0)
-     {
-       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-       // Draw a polygon with specified vertices.
-       
-       for(int i = 0; i < xSquares; i++)
-	 {
-	   for(int j = 0; j < ySquares; j++)
-	     {
-	       glColor3ub(255-colors[activeBoard][i][j][0], 255-colors[activeBoard][i][j][1], 255-colors[activeBoard][i][j][2]);
-	       glRectf((i*(100/(float)xSquares))+0.2, (j*(100/(float)ySquares))+0.2 , ((i+1)*(100/(float)xSquares))-0.2, ((j+1)*(100/(float)ySquares))-0.2);
-	     }
-	 }
-     }
-   else if(mode == 1)
-   {
-     fillTex();
-     glBindTexture(GL_TEXTURE_2D, texture);
+  if(mode == 0)
+    {
+      glBindTexture(GL_TEXTURE_2D, 0);
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+      // Draw a polygon with specified vertices.
 
-     glBegin(GL_POLYGON);
-     glTexCoord2f(0.0, 0.0); glVertex3f(-10.0, -10.0, 0.0);
-     glTexCoord2f(1.0, 0.0); glVertex3f(10.0, -10.0, 0.0);
-     glTexCoord2f(1.0, 1.0); glVertex3f(10.0, 10.0, 0.0);
-     glTexCoord2f(0.0, 1.0); glVertex3f(-10.0, 10.0, 0.0);
-     glEnd();
-   }
-   glutSwapBuffers();   
+      for(int i = 0; i < xSquares; i++)
+	{
+	  for(int j = 0; j < ySquares; j++)
+	    {
+	      glColor3ub(255-colors[activeBoard][i][j][0], 255-colors[activeBoard][i][j][1], 255-colors[activeBoard][i][j][2]);
+	      glRectf((i*(100/(float)xSquares))+0.2, (j*(100/(float)ySquares))+0.2 , ((i+1)*(100/(float)xSquares))-0.2, ((j+1)*(100/(float)ySquares))-0.2);
+	    }
+	}
+    }
+  else if(mode == 1)
+    {
+      fillTex();
+      glBindTexture(GL_TEXTURE_2D, texture);
+
+      glBegin(GL_POLYGON);
+      glTexCoord2f(0.0, 0.0); glVertex3f(1.0, 1.0, 0.0);
+      glTexCoord2f(1.0, 0.0); glVertex3f(99.0, 1.0, 0.0);
+      glTexCoord2f(1.0, 1.0); glVertex3f(99.0, 99.0, 0.0);
+      glTexCoord2f(0.0, 1.0); glVertex3f(1.0, 99.0, 0.0);
+      glEnd();
+    }
+  glutSwapBuffers();   
 }
 
 // Initialization routine.
 void setup(void) 
 {
-   // Set background (or clearing) color.
-   glClearColor(0.0, 0.0, 0.0, 0.0); 
-   glGenTextures(1,&texture);
-   glEnable(GL_TEXTURE_2D);
-   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  // Set background (or clearing) color.
+  glClearColor(0.0, 0.0, 0.0, 0.0); 
+  glGenTextures(1,&texture);
+  glEnable(GL_TEXTURE_2D);
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 }
 
 // OpenGL window reshape routine.
 void resize(int w, int h)
 {
-   // Set viewport size to be entire OpenGL window.
-   glViewport(0, 0, (GLsizei)w, (GLsizei)h);
-   windowWidth = w;
-   windowHeight = h;
+  // Set viewport size to be entire OpenGL window.
+  glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+  windowWidth = w;
+  windowHeight = h;
   
-   // Set matrix mode to projection.
-   glMatrixMode(GL_PROJECTION);
+  // Set matrix mode to projection.
+  glMatrixMode(GL_PROJECTION);
 
-   // Clear current projection matrix to identity.
-   glLoadIdentity();
+  // Clear current projection matrix to identity.
+  glLoadIdentity();
 
-   // Specify the orthographic (or perpendicular) projection, 
-   // i.e., define the viewing box.
-   glOrtho(0.0, 100.0, 0.0, 100.0, -1.0, 1.0);
+  // Specify the orthographic (or perpendicular) projection, 
+  // i.e., define the viewing box.
+  glOrtho(0.0, 100.0, 0.0, 100.0, -1.0, 1.0);
 
-   // Set matrix mode to modelview.
-   glMatrixMode(GL_MODELVIEW);
+  // Set matrix mode to modelview.
+  glMatrixMode(GL_MODELVIEW);
 
-   // Clear current modelview matrix to identity.
-   glLoadIdentity();
+  // Clear current modelview matrix to identity.
+  glLoadIdentity();
 }
 
 // Keyboard input processing routine.
 void keyInput(unsigned char key, int x, int y)
 {
-   switch(key) 
-   {
-	  // Press escape to exit.
-      case 27:
-         exit(0);
-         break;
-      default:
-         break;
-
-      case 'x':
-         if (xSquares < X_MAX){
-            xSquares++;
-            drawScene();
-         }
+  switch(key) 
+    {
+      // Press escape to exit.
+    case 27:
+      exit(0);
+      break;
+    default:
       break;
 
-      case 'X':
-         if (xSquares > 3){
-            xSquares--;
-            drawScene();
-         }
+    case 'x':
+      if (xSquares < X_MAX){
+	xSquares++;
+	drawScene();
+      }
       break;
 
-      case 'y':
-         if (ySquares < Y_MAX){
-            ySquares++;
-            drawScene();
-         }
+    case 'X':
+      if (xSquares > 3){
+	xSquares--;
+	drawScene();
+      }
       break;
 
-      case 'Y':
-         if (ySquares > 3){
-            ySquares--;
-            drawScene();
-         }
+    case 'y':
+      if (ySquares < Y_MAX){
+	ySquares++;
+	drawScene();
+      }
       break;
 
-      case 's':
-         stepPeriod = stepPeriod*0.9;
-         if (stepPeriod < minStepPeriod)
-         {
-            stepPeriod = minStepPeriod;
-         }
+    case 'Y':
+      if (ySquares > 3){
+	ySquares--;
+	drawScene();
+      }
       break;
 
-      case 'S':
-         stepPeriod = stepPeriod*1.1;
-         if (stepPeriod > maxStepPeriod)
-         {
-            stepPeriod = maxStepPeriod;
-         }
+    case 's':
+      stepPeriod = stepPeriod*0.9;
+      if (stepPeriod < minStepPeriod)
+	{
+	  stepPeriod = minStepPeriod;
+	}
       break;
 
-   case 'p':
-         propogateLife();
-         glutPostRedisplay();
+    case 'S':
+      stepPeriod = stepPeriod*1.1;
+      if (stepPeriod > maxStepPeriod)
+	{
+	  stepPeriod = maxStepPeriod;
+	}
       break;
 
-   case ' ':
-         isStepping = !isStepping;
+    case 'p':
+      propogateLife();
+      glutPostRedisplay();
+      break;
+
+    case ' ':
+      isStepping = !isStepping;
       break;
       
-   case '1':
-     mode = 1;
-     drawScene();
-     break;
-   case '0':
-     mode = 0;
-     drawScene();
-     break;
+    case '1':
+      mode = 1;
+      drawScene();
+      break;
+    case '0':
+      mode = 0;
+      drawScene();
+      break;
 
-   }
+    }
 }
 
 
 void mouseControl(int button, int state, int x, int y)
 {
-   if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
-   {
-     int cellX = floor(x/(windowWidth/(float)xSquares));
-     int cellY = ySquares - 1 - floor(y/(windowHeight/(float)ySquares));
+  if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && !mode)
+    {
+      int cellX = floor(x/(windowWidth/(float)xSquares));
+      int cellY = ySquares - 1 - floor(y/(windowHeight/(float)ySquares));
       currentRed = cursorRed;
       currentGreen = cursorGreen;
       currentBlue = cursorBlue;
       clickActiveCell(cellX, cellY);
-   }
-   glutPostRedisplay();
+    }
+  glutPostRedisplay();
 }
 
 void step(int value)
 {
-   if (isStepping) 
-   {
+  if (isStepping) 
+    {
       propogateLife();
-   }
-   glutTimerFunc(stepPeriod, step, 1);
-   glutPostRedisplay();
+    }
+  glutTimerFunc(stepPeriod, step, 1);
+  glutPostRedisplay();
 }
 
 void colorMenu(int id)
 {
-   if (id==1) 
-   {
+  if (id==1) 
+    {
       cursorRed = 0;
       cursorGreen = 255;
       cursorBlue = 255;
-   }
-   if (id==2)
-   {
+    }
+  if (id==2)
+    {
       cursorRed = 255;
       cursorGreen = 0;
       cursorBlue = 255;
-   }
-   if (id==3)
-   {
+    }
+  if (id==3)
+    {
       cursorRed = 255;
       cursorGreen = 255;
       cursorBlue = 0;
-   }
+    }
 }
 
 void mainMenu(int id)
 {
-   if (id==4) 
-      exit(0);
+  if (id==4) 
+    exit(0);
 }
 
 void makeMenu(void)
 {
-   int sub_menu;
-   sub_menu = glutCreateMenu(colorMenu);
-   glutAddMenuEntry("Red", 1);
-   glutAddMenuEntry("Green",2);
-   glutAddMenuEntry("Blue", 3);
+  int sub_menu;
+  sub_menu = glutCreateMenu(colorMenu);
+  glutAddMenuEntry("Red", 1);
+  glutAddMenuEntry("Green",2);
+  glutAddMenuEntry("Blue", 3);
 
-   glutCreateMenu(mainMenu);
-   glutAddSubMenu("Colors", sub_menu);
-   glutAddMenuEntry("Quit",4);
-   glutAttachMenu(GLUT_RIGHT_BUTTON);
+  glutCreateMenu(mainMenu);
+  glutAddSubMenu("Colors", sub_menu);
+  glutAddMenuEntry("Quit",4);
+  glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
 
@@ -455,20 +457,20 @@ void makeMenu(void)
 // registers callback routines and begins processing.
 int main(int argc, char **argv) 
 {  
-   glutInit(&argc, argv);
-   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB); 
-   glutInitWindowSize(windowWidth, windowHeight);
-   glutInitWindowPosition(100, 100); 
-   glutCreateWindow("Game of Life");
-   // Initializing
-   setup(); 
-   glutDisplayFunc(drawScene); 
-   glutReshapeFunc(resize);  
-   glutKeyboardFunc(keyInput);
-   glutMouseFunc(mouseControl); 
-   glutTimerFunc(5, step, 1);
-   makeMenu();
-   glutMainLoop(); 
+  glutInit(&argc, argv);
+  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB); 
+  glutInitWindowSize(windowWidth, windowHeight);
+  glutInitWindowPosition(100, 100); 
+  glutCreateWindow("Game of Life");
+  // Initializing
+  setup(); 
+  glutDisplayFunc(drawScene); 
+  glutReshapeFunc(resize);  
+  glutKeyboardFunc(keyInput);
+  glutMouseFunc(mouseControl); 
+  glutTimerFunc(5, step, 1);
+  makeMenu();
+  glutMainLoop(); 
 
-   return 0;  
+  return 0;  
 }
