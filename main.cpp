@@ -428,29 +428,53 @@ void step(int value)
 void colorMenu(int id)
 {
   if (id==1) 
-    {
-      cursorRed = 0;
-      cursorGreen = 255;
-      cursorBlue = 255;
-    }
+  {
+    cursorRed = 0;
+    cursorGreen = 255;
+    cursorBlue = 255;
+  }
   if (id==2)
-    {
-      cursorRed = 255;
-      cursorGreen = 0;
-      cursorBlue = 255;
-    }
+  {
+    cursorRed = 0;
+    cursorGreen = 127;
+    cursorBlue = 255;
+  }
   if (id==3)
-    {
-      cursorRed = 255;
-      cursorGreen = 255;
-      cursorBlue = 0;
-    }
+  {
+    cursorRed = 0;
+    cursorGreen = 0;
+    cursorBlue = 255;
+  }
+  if (id==4)
+  {
+    cursorRed = 255;
+    cursorGreen = 0;
+    cursorBlue = 255;
+  }
+  if (id==5)
+  {
+    cursorRed = 255;
+    cursorGreen = 255;
+    cursorBlue = 0;
+  }
+  if (id==6)
+  {
+    cursorRed = 180;
+    cursorGreen = 255;
+    cursorBlue = 125;
+  }
+  if (id==7)
+  {
+    cursorRed = 255;
+    cursorGreen = 255;
+    cursorBlue = 255;
+  }
 }
 
 // Menu for adding colors
 void mainMenu(int id)
 {
-  if (id==4) 
+  if (id==8) 
     exit(0);
 }
 
@@ -459,12 +483,16 @@ void makeMenu(void)
   int sub_menu;
   sub_menu = glutCreateMenu(colorMenu);
   glutAddMenuEntry("Red", 1);
-  glutAddMenuEntry("Green",2);
-  glutAddMenuEntry("Blue", 3);
+  glutAddMenuEntry("Orange",2);
+  glutAddMenuEntry("Yellow", 3);
+  glutAddMenuEntry("Green", 4);
+  glutAddMenuEntry("Blue", 5);
+  glutAddMenuEntry("Purple", 6);
+  glutAddMenuEntry("Black", 7);
 
   glutCreateMenu(mainMenu);
   glutAddSubMenu("Colors", sub_menu);
-  glutAddMenuEntry("Quit",4);
+  glutAddMenuEntry("Quit",8);
   glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
