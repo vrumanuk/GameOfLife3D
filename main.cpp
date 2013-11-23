@@ -11,6 +11,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <cmath>
+#include <limits.h>
 
 #ifdef __APPLE__
 #  include <GLUT/glut.h>
@@ -56,6 +57,57 @@ unsigned int xSquares = 16;
 unsigned int ySquares = 16;
 unsigned int TEX_SQUARE_WIDTH = 4;
 unsigned int TEX_SAMPLE_TYPE = GL_LINEAR;
+
+//use these for drawing the more complex figures
+float* vertices = NULL;
+float* texCoords = NULL;
+
+//torus parameters
+unsigned int R = 30;
+unsigned int r = 10;
+int p = 60;
+int q = 60;
+
+float f(int i, int j)
+{
+  return((R+r*cos((-1+2*(float)j/q)*M_PI))*cos((-1+2*(float)i/p)*M_PI)+50);
+}
+
+float g(int i, int j)
+{
+  return((R+r*cos((-1+2*(float)j/q)*M_PI))*sin((-1+2*(float)i/p)*M_PI)+50);
+}
+
+float h(int i, int j)
+{
+  return(r*sin((-1+2*(float)j/q)*M_PI));
+}
+
+void fillTorusVertices(void)
+{
+  int i,j,k;
+  k=0;
+  for(j=0; j<=q; ++j)
+    for(i=0; i<=p; ++i)
+      {
+	vertices[k++] = f(i,j);
+	vertices[k++] = g(i,j);
+	vertices[k++] = h(i,j);
+      }
+}
+
+void fillTorusTexCoords(void)
+{
+  int i,j,k;
+
+  k=0;
+  for(j=0; j<=q; ++j)
+    for(i=0; i<=p; ++i)
+      {
+	texCoords[k++] = (float)i/p;
+	texCoords[k++] = (float)j/q;
+      }
+}
 
 // Converts our logical game of life array into a valid Texel array for texture mapping
 void fillTex()
@@ -248,8 +300,9 @@ void propogateLife()
 // Drawing (display) routine.
 void drawScene(void)
 {
+  int i,j;
   // Clear screen to background color.
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // Set foreground (or drawing) color.
   glColor3f(1.0, 1.0, 1.0);
@@ -260,9 +313,9 @@ void drawScene(void)
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     // Draw a polygon with specified vertices.
 
-    for(int i = 0; i < xSquares; i++)
+    for(i = 0; i < xSquares; i++)
 	  {
-	    for(int j = 0; j < ySquares; j++)
+	    for(j = 0; j < ySquares; j++)
 	    {
 	      glColor3ub(255-colors[activeBoard][i][j][0], 255-colors[activeBoard][i][j][1], 255-colors[activeBoard][i][j][2]);
 	      glRectf((i*(100/(float)xSquares))+0.2, (j*(100/(float)ySquares))+0.2 , ((i+1)*(100/(float)xSquares))-0.2, ((j+1)*(100/(float)ySquares))-0.2);
@@ -281,12 +334,39 @@ void drawScene(void)
     glTexCoord2f(0.0, 1.0); glVertex3f(1.0, 99.0, 0.0);
     glEnd();
   }
+  else if(mode == 2)
+    {
+      fillTex();
+      glBindTexture(GL_TEXTURE_2D, texture);
+      vertices = new float[3*(p+1)*(q+1)];
+      texCoords = new float[2*(p+1)*(q+1)];
+
+      glVertexPointer(3, GL_FLOAT, 0, vertices);
+      glTexCoordPointer(2, GL_FLOAT, 0, texCoords);
+      
+      fillTorusVertices();
+      fillTorusTexCoords();
+
+      for(j=0; j<q; ++j)
+	{
+	  glBegin(GL_TRIANGLE_STRIP);
+	  for(i=0; i<=p; ++i)
+	    {
+	      glArrayElement((j+1)*(p+1)+i);
+	      glArrayElement(j*(p+1)+i);
+	    }
+	  glEnd();
+	}
+    }
   glutSwapBuffers();   
 }
 
 // Initialization routine.
 void setup(void) 
 {
+  glEnable(GL_DEPTH_TEST);
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
   // Set background (or clearing) color.
   glClearColor(0.0, 0.0, 0.0, 0.0); 
   glGenTextures(1,&texture);
@@ -310,7 +390,7 @@ void resize(int w, int h)
 
   // Specify the orthographic (or perpendicular) projection, 
   // i.e., define the viewing box.
-  glOrtho(0.0, 100.0, 0.0, 100.0, -1.0, 1.0);
+  glOrtho(0.0, 100.0, 0.0, 100.0, -100.0, 100.0);
 
   // Set matrix mode to modelview.
   glMatrixMode(GL_MODELVIEW);
@@ -379,7 +459,7 @@ void keyInput(unsigned char key, int x, int y)
 	  }
     break;
 
-  case 'p':
+  case 'n':
     propogateLife();
     glutPostRedisplay();
     break;
@@ -403,10 +483,37 @@ void keyInput(unsigned char key, int x, int y)
       TEX_SAMPLE_TYPE=GL_LINEAR;
     break;
 
+  case 'p':
+    p += 3;
+    if(p<0)
+      p=INT_MAX;
+    break;
+  case 'P':
+    p -= 3;
+    if(p<=0)
+      p=3;
+    break;
+
+  case 'q':
+    q += 3;
+    if(q<0)
+      q=INT_MAX;
+    break;
+  case 'Q':
+    q -= 3;
+    if(q<=0)
+      q=3;
+    break;
+
   case ' ':
     isStepping = !isStepping;
     break;
-    
+
+  case '2':
+    mode = 2;
+
+    drawScene();
+    break;
   case '1':
     mode = 1;
     drawScene();
