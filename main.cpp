@@ -28,12 +28,18 @@ unsigned int dragState = 0;
 bool isStepping = 0;
 unsigned char activeBoard = 0;
 unsigned char mode = 0;
-// ADD A WAY FOR USERS TO CHANGE THIS
+
+// Wrap modes
+unsigned char xWrapMode = 0;
+unsigned char yWrapMode = 0;
+// 0 is no wrapping
+// 1 is normal wrapping
+// 2 is sphere vertex wrapping
+
 unsigned int stepPeriod = 400;
 unsigned int maxStepPeriod = 5000;
 unsigned int minStepPeriod = 50;
 
-// ADD A MENU FOR USERS TO CHANGE THIS
 unsigned char currentRed = 128;
 unsigned char currentGreen = 128;
 unsigned char currentBlue = 128;
@@ -188,7 +194,89 @@ void clickActiveCell(int cellX, int cellY)
     }
 }
 
-//
+void getWrappedCoordinates(int i, int j, int coordinates[])
+{
+  coordinates[0] = -1;
+  coordinates[1] = -1;
+  int tempX = 0;
+  int tempY = 0;
+
+  // X wrapping
+  if(i < 0)
+  {
+    if(xWrapMode == 0)
+    {
+      coordinates[0] = -1;
+      coordinates[1] = -1;
+      return;
+    }
+    else
+    {
+      tempX = xSquares-1;
+    }
+  }
+  else if(i >= xSquares)
+  {
+    if(xWrapMode == 0)
+    {
+      coordinates[0] = -1;
+      coordinates[1] = -1;
+      return;
+    }
+    else
+      tempX = 0;
+  }
+  else
+    tempX = i;
+
+  // Y wrapping
+  if(j < 0)
+  {
+    if(yWrapMode == 0)
+    {
+      coordinates[0] = -1;
+      coordinates[1] = -1;
+      return;
+    }
+    else if (yWrapMode == 2)
+    {
+      tempY = 0;
+      tempX = (tempX+(xSquares/2))%xSquares;
+      coordinates[0] = tempX;
+      coordinates[1] = tempY;
+      return;
+    }
+    else
+      tempY = ySquares-1;
+  }
+  else if(j >= ySquares)
+  {
+    if(yWrapMode == 0)
+    {
+      coordinates[0] = -1;
+      coordinates[1] = -1;
+      return;
+    }
+    else if(yWrapMode == 2)
+    {
+      tempY = ySquares-1;
+      tempX = (tempX+(xSquares/2))%xSquares;
+      coordinates[0] = tempX;
+      coordinates[1] = tempY;
+      return;
+    }
+    else
+      tempY = 0;
+  }
+  else
+    tempY = j;
+
+  coordinates[0] = tempX;
+  coordinates[1] = tempY;
+  return;
+}
+
+// Revive Cell
 void reviveCell(int cellX, int cellY, int neighbors)
 {
   int redTotal = 0;
@@ -202,23 +290,17 @@ void reviveCell(int cellX, int cellY, int neighbors)
 	  {
 	    // avoid counting self
 	    if(i==cellX && j==cellY)
+	        continue;
+
+      int coords[2];
+      getWrappedCoordinates(i, j, coords);
+
+      if (coords[0] == -1 || coords[1] == -1)
         continue;
 
-	    // X wrapping
-	    if(i >= xSquares)
-        tempX = 0;
-	    else if(i < 0)
-        tempX = xSquares-1;
-	    else
-        tempX = i;
+      tempX = coords[0];
+      tempY = coords[1];
 
-	    // Y wrapping
-	    if(j >= ySquares)
-        tempY = 0;
-	    else if(j < 0)
-        tempY = ySquares-1;
-	    else
-        tempY = j;
 	    if (cellIsAlive(tempX, tempY))
 	    {
 	      redTotal+=colors[activeBoard][tempX][tempY][0];
@@ -248,25 +330,18 @@ int numberOfLivingNeighbors(int cellX, int cellY)
 	    // avoid counting self
 	    if(i==cellX && j==cellY)
         continue;
+      
+      int coords[2];
+      getWrappedCoordinates(i, j, coords);
 
-	    // X wrapping
-	    if(i >= xSquares)
-        tempX = 0;
-	    else if(i < 0)
-        tempX = xSquares-1;
-	    else
-        tempX = i;
+      if (coords[0] == -1 || coords[1] == -1)
+        continue;
 
-	    // Y wrapping
-	    if(j >= ySquares)
-        tempY = 0;
-	    else if(j < 0)
-        tempY = ySquares-1;
-	    else
-        tempY = j;
+      tempX = coords[0];
+      tempY = coords[1];
 
 	    if (cellIsAlive(tempX, tempY))
-        livingNeighbors++;
+        	livingNeighbors++;
 	  }
   }
   return livingNeighbors;
@@ -414,7 +489,7 @@ void keyInput(unsigned char key, int x, int y)
   case 'x':
     if (xSquares < X_MAX)
     {
-	    xSquares++;
+	    xSquares+=2;
 	    drawScene();
     }
     break;
@@ -422,7 +497,7 @@ void keyInput(unsigned char key, int x, int y)
   case 'X':
     if (xSquares > 3)
     {
-	    xSquares--;
+	    xSquares-=2;
 	    drawScene();
     }
     break;
@@ -516,6 +591,8 @@ void keyInput(unsigned char key, int x, int y)
     break;
   case '1':
     mode = 1;
+    xWrapMode = 0;
+    yWrapMode = 0;
     drawScene();
     break;
   case '0':
@@ -544,19 +621,19 @@ void mouseMotion(int x, int y)
 {     
   int cellX = floor(x/(windowWidth/(float)xSquares));
   int cellY = ySquares - 1 - floor(y/(windowHeight/(float)ySquares));
-  if(dragState == 1)
-    {
-      colors[activeBoard][cellX][cellY][0] = cursorRed;
-      colors[activeBoard][cellX][cellY][1] = cursorGreen;
-      colors[activeBoard][cellX][cellY][2] = cursorBlue;  
-    }
-  else
-    {
-      colors[activeBoard][cellX][cellY][0] = 0;
-      colors[activeBoard][cellX][cellY][1] = 0;
-      colors[activeBoard][cellX][cellY][2] = 0;  
-    }
-  glutPostRedisplay();
+  if(0 <= cellX && cellX < xSquares && 0 <= cellY && cellY < ySquares){
+  	if(dragState == 1){
+      		colors[activeBoard][cellX][cellY][0] = cursorRed;
+     	 	colors[activeBoard][cellX][cellY][1] = cursorGreen;
+      		colors[activeBoard][cellX][cellY][2] = cursorBlue;  
+    	}
+  	else{
+      		colors[activeBoard][cellX][cellY][0] = 0;
+      		colors[activeBoard][cellX][cellY][1] = 0;
+      		colors[activeBoard][cellX][cellY][2] = 0;  
+    	}
+  	glutPostRedisplay();
+  }
 }
 
 // One step of life
@@ -617,17 +694,37 @@ void colorMenu(int id)
   }
 }
 
+void wrappingMenu(int id)
+{
+  if (id==8)
+  {
+    xWrapMode = 0;
+    yWrapMode = 0;
+  }
+  if (id==9)
+  {
+    xWrapMode = 1;
+    yWrapMode = 1;
+  }
+  if (id==10)
+  {
+    xWrapMode = 1;
+    yWrapMode = 2;
+  }
+}
+
 // Menu for adding colors
 void mainMenu(int id)
 {
-  if (id==8) 
+  if (id == 11) 
     exit(0);
 }
 
 void makeMenu(void)
 {
-  int sub_menu;
-  sub_menu = glutCreateMenu(colorMenu);
+  int sub_menu_colors;
+  int sub_menu_wrapping;
+  sub_menu_colors = glutCreateMenu(colorMenu);
   glutAddMenuEntry("Red", 1);
   glutAddMenuEntry("Orange",2);
   glutAddMenuEntry("Yellow", 3);
@@ -636,9 +733,15 @@ void makeMenu(void)
   glutAddMenuEntry("Purple", 6);
   glutAddMenuEntry("Black", 7);
 
+  sub_menu_wrapping = glutCreateMenu(wrappingMenu);
+  glutAddMenuEntry("No Wrapping", 8);
+  glutAddMenuEntry("Full Wrapping", 9);
+  glutAddMenuEntry("Sphere Wrapping", 10);
+
   glutCreateMenu(mainMenu);
-  glutAddSubMenu("Colors", sub_menu);
-  glutAddMenuEntry("Quit",8);
+  glutAddSubMenu("Colors", sub_menu_colors);
+  glutAddSubMenu("Wrapping", sub_menu_wrapping);
+  glutAddMenuEntry("Quit",11);
   glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
