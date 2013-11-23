@@ -586,7 +586,8 @@ void keyInput(unsigned char key, int x, int y)
 
   case '2':
     mode = 2;
-
+    xWrapMode = 1;
+    yWrapMode = 1;
     drawScene();
     break;
   case '1':
@@ -597,6 +598,8 @@ void keyInput(unsigned char key, int x, int y)
     break;
   case '0':
     mode = 0;
+    xWrapMode = 0;
+    yWrapMode = 0;
     drawScene();
     break;
     }
