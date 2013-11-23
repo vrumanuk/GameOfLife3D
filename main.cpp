@@ -23,6 +23,7 @@ using namespace std;
 const int X_MAX = 100;
 const int Y_MAX = 100;
 
+unsigned int dragState = 0;
 bool isStepping = 0;
 unsigned char activeBoard = 0;
 unsigned char mode = 0;
@@ -121,15 +122,17 @@ void clickActiveCell(int cellX, int cellY)
 {
   if(!cellIsAlive(cellX, cellY))
     {
-      colors[activeBoard][cellX][cellY][0] = currentRed;
-      colors[activeBoard][cellX][cellY][1] = currentGreen;
-      colors[activeBoard][cellX][cellY][2] = currentBlue;  
+	dragState = 1;
+	colors[activeBoard][cellX][cellY][0] = currentRed;
+	colors[activeBoard][cellX][cellY][1] = currentGreen;
+	colors[activeBoard][cellX][cellY][2] = currentBlue;  
     }
   else
     {
-      colors[activeBoard][cellX][cellY][0] = 0;
-      colors[activeBoard][cellX][cellY][1] = 0;
-      colors[activeBoard][cellX][cellY][2] = 0;  
+	dragState = 0;
+	colors[activeBoard][cellX][cellY][0] = 0;
+	colors[activeBoard][cellX][cellY][1] = 0;
+	colors[activeBoard][cellX][cellY][2] = 0;  
     }
 }
 
@@ -430,6 +433,25 @@ void mouseControl(int button, int state, int x, int y)
   glutPostRedisplay();
 }
 
+void mouseMotion(int x, int y)
+{     
+  int cellX = floor(x/(windowWidth/(float)xSquares));
+  int cellY = ySquares - 1 - floor(y/(windowHeight/(float)ySquares));
+  if(dragState == 1)
+    {
+      colors[activeBoard][cellX][cellY][0] = cursorRed;
+      colors[activeBoard][cellX][cellY][1] = cursorGreen;
+      colors[activeBoard][cellX][cellY][2] = cursorBlue;  
+    }
+  else
+    {
+      colors[activeBoard][cellX][cellY][0] = 0;
+      colors[activeBoard][cellX][cellY][1] = 0;
+      colors[activeBoard][cellX][cellY][2] = 0;  
+    }
+  glutPostRedisplay();
+}
+
 // One step of life
 void step(int value)
 {
@@ -529,6 +551,7 @@ int main(int argc, char **argv)
   glutReshapeFunc(resize);  
   glutKeyboardFunc(keyInput);
   glutMouseFunc(mouseControl); 
+  glutMotionFunc(mouseMotion);
   glutTimerFunc(5, step, 1);
   makeMenu();
   glutMainLoop(); 
