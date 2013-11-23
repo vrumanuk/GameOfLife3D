@@ -1,9 +1,11 @@
 ////////////////////////////////////////////////////
-// square.cpp
+// GameOfLife3D.cpp
 //
-// Stripped down OpenGL program that draws a square.
+// Projects the game of life onto three dimensional objects
 //
-// Sumanta Guha.
+// Nathan Berkley
+// Steven Cropp
+// Viktor Rumanuk
 ////////////////////////////////////////////////////
 
 #include <iostream>
@@ -53,6 +55,7 @@ unsigned int xSquares = 16;
 unsigned int ySquares = 16;
 unsigned int TEX_SQUARE_WIDTH = 4;
 
+// Converts our logical game of life array into a valid Texel array for texture mapping
 void fillTex()
 {
   unsigned int tex_size = TEX_SQUARE_WIDTH*TEX_SQUARE_WIDTH*xSquares*ySquares*3;
@@ -93,6 +96,7 @@ void fillTex()
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TEX_SQUARE_WIDTH*xSquares, TEX_SQUARE_WIDTH*ySquares, 0, GL_RGB, GL_UNSIGNED_BYTE, tex);
 }
 
+// Copies a cell from the active board to the inactive board
 void copyCell(int cellX, int cellY)
 {
   colors[(activeBoard+1)%2][cellX][cellY][0] = colors[activeBoard][cellX][cellY][0];
@@ -100,6 +104,7 @@ void copyCell(int cellX, int cellY)
   colors[(activeBoard+1)%2][cellX][cellY][2] = colors[activeBoard][cellX][cellY][2];
 }
 
+// Sets a cell on the inactive board to dead (0, 0, 0)
 void killCell(int cellX, int cellY)
 {
   colors[(activeBoard+1)%2][cellX][cellY][0] = 0;
@@ -107,11 +112,13 @@ void killCell(int cellX, int cellY)
   colors[(activeBoard+1)%2][cellX][cellY][2] = 0; 
 }
 
+// Check if a cell on the active board is alive (if its color is not white)
 bool cellIsAlive(int cellX, int cellY)
 {
   return colors[activeBoard][cellX][cellY][0] || colors[activeBoard][cellX][cellY][1] || colors[activeBoard][cellX][cellY][0];
 }
 
+// Click calls this to set colors of cells on the active board
 void clickActiveCell(int cellX, int cellY)
 {
   if(!cellIsAlive(cellX, cellY))
@@ -128,6 +135,7 @@ void clickActiveCell(int cellX, int cellY)
     }
 }
 
+//
 void reviveCell(int cellX, int cellY, int neighbors)
 {
   int redTotal = 0;
@@ -136,36 +144,36 @@ void reviveCell(int cellX, int cellY, int neighbors)
   int tempX = 0;
   int tempY = 0;
   for(int i = cellX-1; i <= cellX+1; i++)
-    {
-      for(int j = cellY-1; j <= cellY+1; j++)
-	{
-	  // avoid counting self
-	  if(i==cellX && j==cellY)
-            continue;
+  {
+    for(int j = cellY-1; j <= cellY+1; j++)
+	  {
+	    // avoid counting self
+	    if(i==cellX && j==cellY)
+        continue;
 
-	  // X wrapping
-	  if(i >= xSquares)
-            tempX = 0;
-	  else if(i < 0)
-            tempX = xSquares-1;
-	  else
-            tempX = i;
+	    // X wrapping
+	    if(i >= xSquares)
+        tempX = 0;
+	    else if(i < 0)
+        tempX = xSquares-1;
+	    else
+        tempX = i;
 
-	  // Y wrapping
-	  if(j >= ySquares)
-            tempY = 0;
-	  else if(j < 0)
-            tempY = ySquares-1;
-	  else
-            tempY = j;
-	  if (cellIsAlive(tempX, tempY))
+	    // Y wrapping
+	    if(j >= ySquares)
+        tempY = 0;
+	    else if(j < 0)
+        tempY = ySquares-1;
+	    else
+        tempY = j;
+	    if (cellIsAlive(tempX, tempY))
 	    {
 	      redTotal+=colors[activeBoard][tempX][tempY][0];
 	      greenTotal+=colors[activeBoard][tempX][tempY][1];
 	      blueTotal+=colors[activeBoard][tempX][tempY][2];
 	    }
-	}
-    }
+	  }
+  }
   currentRed = redTotal / neighbors;
   currentGreen = greenTotal / neighbors;
   currentBlue = blueTotal / neighbors;
@@ -174,63 +182,65 @@ void reviveCell(int cellX, int cellY, int neighbors)
   colors[(activeBoard+1)%2][cellX][cellY][2] = currentBlue; 
 }
 
+// Function to determine how many neighbors are living next to a given cell
 int numberOfLivingNeighbors(int cellX, int cellY)
 {
   int livingNeighbors = 0;
   int tempX = 0;
   int tempY = 0;
   for(int i = cellX-1; i <= cellX+1; i++)
-    {
-      for(int j = cellY-1; j <= cellY+1; j++)
-	{
-	  // avoid counting self
-	  if(i==cellX && j==cellY)
-            continue;
+  {
+    for(int j = cellY-1; j <= cellY+1; j++)
+	  {
+	    // avoid counting self
+	    if(i==cellX && j==cellY)
+        continue;
 
-	  // X wrapping
-	  if(i >= xSquares)
-            tempX = 0;
-	  else if(i < 0)
-            tempX = xSquares-1;
-	  else
-            tempX = i;
+	    // X wrapping
+	    if(i >= xSquares)
+        tempX = 0;
+	    else if(i < 0)
+        tempX = xSquares-1;
+	    else
+        tempX = i;
 
-	  // Y wrapping
-	  if(j >= ySquares)
-            tempY = 0;
-	  else if(j < 0)
-            tempY = ySquares-1;
-	  else
-            tempY = j;
+	    // Y wrapping
+	    if(j >= ySquares)
+        tempY = 0;
+	    else if(j < 0)
+        tempY = ySquares-1;
+	    else
+        tempY = j;
 
-	  if (cellIsAlive(tempX, tempY))
-            livingNeighbors++;
-	}
-    }
+	    if (cellIsAlive(tempX, tempY))
+        livingNeighbors++;
+	  }
+  }
   return livingNeighbors;
 }
 
+// Propogates life 1 generation
 void propogateLife()
 {
   for(int i = 0; i < xSquares; i++)
-    {
-      for(int j = 0; j < ySquares; j++)
-	{
-	  int cellNeighbors = numberOfLivingNeighbors(i, j);
-	  if(!cellIsAlive(i, j) && cellNeighbors >= minimumRevive && cellNeighbors <= maximumForLife)
+  {
+    for(int j = 0; j < ySquares; j++)
+	  {
+	    int cellNeighbors = numberOfLivingNeighbors(i, j);
+	    if(!cellIsAlive(i, j) && cellNeighbors >= minimumRevive && cellNeighbors <= maximumForLife)
 	    {
 	      reviveCell(i, j, cellNeighbors);
 	    }
-	  else if(cellIsAlive(i, j) && cellNeighbors >= minimumSurvive && cellNeighbors <= maximumForLife)
+	    else if(cellIsAlive(i, j) && cellNeighbors >= minimumSurvive && cellNeighbors <= maximumForLife)
 	    {
 	      copyCell(i, j);
 	    }
-	  else
+	    else
 	    {
 	      killCell(i, j);
 	    }
-	}
-    }
+	  }
+  }
   activeBoard = (activeBoard+1)%2;
 }
 
@@ -244,32 +254,32 @@ void drawScene(void)
   glColor3f(1.0, 1.0, 1.0);
 
   if(mode == 0)
-    {
-      glBindTexture(GL_TEXTURE_2D, 0);
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-      // Draw a polygon with specified vertices.
+  {
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    // Draw a polygon with specified vertices.
 
-      for(int i = 0; i < xSquares; i++)
-	{
-	  for(int j = 0; j < ySquares; j++)
+    for(int i = 0; i < xSquares; i++)
+	  {
+	    for(int j = 0; j < ySquares; j++)
 	    {
 	      glColor3ub(255-colors[activeBoard][i][j][0], 255-colors[activeBoard][i][j][1], 255-colors[activeBoard][i][j][2]);
 	      glRectf((i*(100/(float)xSquares))+0.2, (j*(100/(float)ySquares))+0.2 , ((i+1)*(100/(float)xSquares))-0.2, ((j+1)*(100/(float)ySquares))-0.2);
 	    }
-	}
-    }
+	  }
+  }
   else if(mode == 1)
-    {
-      fillTex();
-      glBindTexture(GL_TEXTURE_2D, texture);
+  {
+    fillTex();
+    glBindTexture(GL_TEXTURE_2D, texture);
 
-      glBegin(GL_POLYGON);
-      glTexCoord2f(0.0, 0.0); glVertex3f(1.0, 1.0, 0.0);
-      glTexCoord2f(1.0, 0.0); glVertex3f(99.0, 1.0, 0.0);
-      glTexCoord2f(1.0, 1.0); glVertex3f(99.0, 99.0, 0.0);
-      glTexCoord2f(0.0, 1.0); glVertex3f(1.0, 99.0, 0.0);
-      glEnd();
-    }
+    glBegin(GL_POLYGON);
+    glTexCoord2f(0.0, 0.0); glVertex3f(1.0, 1.0, 0.0);
+    glTexCoord2f(1.0, 0.0); glVertex3f(99.0, 1.0, 0.0);
+    glTexCoord2f(1.0, 1.0); glVertex3f(99.0, 99.0, 0.0);
+    glTexCoord2f(0.0, 1.0); glVertex3f(1.0, 99.0, 0.0);
+    glEnd();
+  }
   glutSwapBuffers();   
 }
 
@@ -312,7 +322,7 @@ void resize(int w, int h)
 void keyInput(unsigned char key, int x, int y)
 {
   switch(key) 
-    {
+  {
       // Press escape to exit.
     case 27:
       exit(0);
@@ -320,72 +330,75 @@ void keyInput(unsigned char key, int x, int y)
     default:
       break;
 
-    case 'x':
-      if (xSquares < X_MAX){
-	xSquares++;
-	drawScene();
-      }
-      break;
+  case 'x':
+    if (xSquares < X_MAX)
+    {
+	    xSquares++;
+	    drawScene();
+    }
+    break;
 
-    case 'X':
-      if (xSquares > 3){
-	xSquares--;
-	drawScene();
-      }
-      break;
+  case 'X':
+    if (xSquares > 3)
+    {
+	    xSquares--;
+	    drawScene();
+    }
+    break;
 
-    case 'y':
-      if (ySquares < Y_MAX){
-	ySquares++;
-	drawScene();
-      }
-      break;
+  case 'y':
+    if (ySquares < Y_MAX)
+    {
+	    ySquares++;
+	    drawScene();
+    }
+    break;
 
-    case 'Y':
-      if (ySquares > 3){
-	ySquares--;
-	drawScene();
-      }
-      break;
+  case 'Y':
+    if (ySquares > 3)
+    {
+	    ySquares--;
+	    drawScene();
+    }
+    break;
 
-    case 's':
-      stepPeriod = stepPeriod*0.9;
-      if (stepPeriod < minStepPeriod)
-	{
-	  stepPeriod = minStepPeriod;
-	}
-      break;
+  case 's':
+    stepPeriod = stepPeriod*0.9;
+    if (stepPeriod < minStepPeriod)
+	  {
+	    stepPeriod = minStepPeriod;
+	  }
+    break;
 
-    case 'S':
-      stepPeriod = stepPeriod*1.1;
-      if (stepPeriod > maxStepPeriod)
-	{
-	  stepPeriod = maxStepPeriod;
-	}
-      break;
+  case 'S':
+    stepPeriod = stepPeriod*1.1;
+    if (stepPeriod > maxStepPeriod)
+	  {
+	    stepPeriod = maxStepPeriod;
+	  }
+    break;
 
-    case 'p':
-      propogateLife();
-      glutPostRedisplay();
-      break;
+  case 'p':
+    propogateLife();
+    glutPostRedisplay();
+    break;
 
-    case ' ':
-      isStepping = !isStepping;
-      break;
-      
-    case '1':
-      mode = 1;
-      drawScene();
-      break;
-    case '0':
-      mode = 0;
-      drawScene();
-      break;
-
+  case ' ':
+    isStepping = !isStepping;
+    break;
+    
+  case '1':
+    mode = 1;
+    drawScene();
+    break;
+  case '0':
+    mode = 0;
+    drawScene();
+    break;
     }
 }
 
-
+// Mouse functions for clicking cells to toggle alive/dead
 void mouseControl(int button, int state, int x, int y)
 {
   if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && !mode)
@@ -400,6 +413,7 @@ void mouseControl(int button, int state, int x, int y)
   glutPostRedisplay();
 }
 
+// One step of life
 void step(int value)
 {
   if (isStepping) 
@@ -410,6 +424,7 @@ void step(int value)
   glutPostRedisplay();
 }
 
+// Menu of colors available
 void colorMenu(int id)
 {
   if (id==1) 
@@ -432,6 +447,7 @@ void colorMenu(int id)
     }
 }
 
+// Menu for adding colors
 void mainMenu(int id)
 {
   if (id==4) 
