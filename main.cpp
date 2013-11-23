@@ -149,23 +149,23 @@ void reviveCell(int cellX, int cellY, int neighbors)
 	  {
 	    // avoid counting self
 	    if(i==cellX && j==cellY)
-        continue;
+	        continue;
 
 	    // X wrapping
 	    if(i >= xSquares)
-        tempX = 0;
+       		 tempX = 0;
 	    else if(i < 0)
-        tempX = xSquares-1;
+        	tempX = xSquares-1;
 	    else
-        tempX = i;
+        	tempX = i;
 
 	    // Y wrapping
 	    if(j >= ySquares)
-        tempY = 0;
+        	tempY = 0;
 	    else if(j < 0)
-        tempY = ySquares-1;
+        	tempY = ySquares-1;
 	    else
-        tempY = j;
+        	tempY = j;
 	    if (cellIsAlive(tempX, tempY))
 	    {
 	      redTotal+=colors[activeBoard][tempX][tempY][0];
@@ -194,26 +194,26 @@ int numberOfLivingNeighbors(int cellX, int cellY)
 	  {
 	    // avoid counting self
 	    if(i==cellX && j==cellY)
-        continue;
+        	continue;
 
 	    // X wrapping
 	    if(i >= xSquares)
-        tempX = 0;
+        	tempX = 0;
 	    else if(i < 0)
-        tempX = xSquares-1;
+        	tempX = xSquares-1;
 	    else
-        tempX = i;
+        	tempX = i;
 
 	    // Y wrapping
 	    if(j >= ySquares)
-        tempY = 0;
+        	tempY = 0;
 	    else if(j < 0)
-        tempY = ySquares-1;
+        	tempY = ySquares-1;
 	    else
-        tempY = j;
+        	tempY = j;
 
 	    if (cellIsAlive(tempX, tempY))
-        livingNeighbors++;
+        	livingNeighbors++;
 	  }
   }
   return livingNeighbors;
@@ -417,19 +417,19 @@ void mouseMotion(int x, int y)
 {     
   int cellX = floor(x/(windowWidth/(float)xSquares));
   int cellY = ySquares - 1 - floor(y/(windowHeight/(float)ySquares));
-  if(dragState == 1)
-    {
-      colors[activeBoard][cellX][cellY][0] = cursorRed;
-      colors[activeBoard][cellX][cellY][1] = cursorGreen;
-      colors[activeBoard][cellX][cellY][2] = cursorBlue;  
-    }
-  else
-    {
-      colors[activeBoard][cellX][cellY][0] = 0;
-      colors[activeBoard][cellX][cellY][1] = 0;
-      colors[activeBoard][cellX][cellY][2] = 0;  
-    }
-  glutPostRedisplay();
+  if(0 <= cellX && cellX < xSquares && 0 <= cellY && cellY < ySquares){
+  	if(dragState == 1){
+      		colors[activeBoard][cellX][cellY][0] = cursorRed;
+     	 	colors[activeBoard][cellX][cellY][1] = cursorGreen;
+      		colors[activeBoard][cellX][cellY][2] = cursorBlue;  
+    	}
+  	else{
+      		colors[activeBoard][cellX][cellY][0] = 0;
+      		colors[activeBoard][cellX][cellY][1] = 0;
+      		colors[activeBoard][cellX][cellY][2] = 0;  
+    	}
+  	glutPostRedisplay();
+  }
 }
 
 // One step of life
