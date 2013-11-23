@@ -55,6 +55,7 @@ int windowHeight = 600;
 unsigned int xSquares = 16;
 unsigned int ySquares = 16;
 unsigned int TEX_SQUARE_WIDTH = 4;
+unsigned int TEX_SAMPLE_TYPE = GL_LINEAR;
 
 // Converts our logical game of life array into a valid Texel array for texture mapping
 void fillTex()
@@ -88,8 +89,8 @@ void fillTex()
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, TEX_SAMPLE_TYPE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, TEX_SAMPLE_TYPE);
   
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TEX_SQUARE_WIDTH*xSquares, TEX_SQUARE_WIDTH*ySquares, 0, GL_RGB, GL_UNSIGNED_BYTE, tex);
 }
@@ -383,6 +384,25 @@ void keyInput(unsigned char key, int x, int y)
     glutPostRedisplay();
     break;
 
+  case 'R':
+    TEX_SQUARE_WIDTH = TEX_SQUARE_WIDTH >> 1;
+    if(!TEX_SQUARE_WIDTH)
+      TEX_SQUARE_WIDTH = 1u;
+    break;
+
+  case 'r':
+    TEX_SQUARE_WIDTH = TEX_SQUARE_WIDTH << 1;
+    if(!TEX_SQUARE_WIDTH)
+      TEX_SQUARE_WIDTH = 1u << sizeof(TEX_SQUARE_WIDTH);
+    break;
+
+  case 't':
+    if(TEX_SAMPLE_TYPE == GL_LINEAR)
+      TEX_SAMPLE_TYPE=GL_NEAREST;
+    else
+      TEX_SAMPLE_TYPE=GL_LINEAR;
+    break;
+
   case ' ':
     isStepping = !isStepping;
     break;
@@ -401,7 +421,7 @@ void keyInput(unsigned char key, int x, int y)
 // Mouse functions for clicking cells to toggle alive/dead
 void mouseControl(int button, int state, int x, int y)
 {
-  if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && !mode)
+  if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
     {
       int cellX = floor(x/(windowWidth/(float)xSquares));
       int cellY = ySquares - 1 - floor(y/(windowHeight/(float)ySquares));
