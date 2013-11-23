@@ -240,7 +240,6 @@ void reviveCell(int cellX, int cellY, int neighbors)
 	    if(i==cellX && j==cellY)
 	        continue;
 
-<<<<<<< HEAD
       int coords[2];
       getWrappedCoordinates(i, j, coords);
 
@@ -250,23 +249,6 @@ void reviveCell(int cellX, int cellY, int neighbors)
       tempX = coords[0];
       tempY = coords[1];
 
-=======
-	    // X wrapping
-	    if(i >= xSquares)
-       		 tempX = 0;
-	    else if(i < 0)
-        	tempX = xSquares-1;
-	    else
-        	tempX = i;
-
-	    // Y wrapping
-	    if(j >= ySquares)
-        	tempY = 0;
-	    else if(j < 0)
-        	tempY = ySquares-1;
-	    else
-        	tempY = j;
->>>>>>> e88119b7393c16f835f2b02dc40fc7a8c5afd67a
 	    if (cellIsAlive(tempX, tempY))
 	    {
 	      redTotal+=colors[activeBoard][tempX][tempY][0];
@@ -295,7 +277,6 @@ int numberOfLivingNeighbors(int cellX, int cellY)
 	  {
 	    // avoid counting self
 	    if(i==cellX && j==cellY)
-<<<<<<< HEAD
         continue;
       
       int coords[2];
@@ -306,25 +287,6 @@ int numberOfLivingNeighbors(int cellX, int cellY)
 
       tempX = coords[0];
       tempY = coords[1];
-=======
-        	continue;
-
-	    // X wrapping
-	    if(i >= xSquares)
-        	tempX = 0;
-	    else if(i < 0)
-        	tempX = xSquares-1;
-	    else
-        	tempX = i;
-
-	    // Y wrapping
-	    if(j >= ySquares)
-        	tempY = 0;
-	    else if(j < 0)
-        	tempY = ySquares-1;
-	    else
-        	tempY = j;
->>>>>>> e88119b7393c16f835f2b02dc40fc7a8c5afd67a
 
 	    if (cellIsAlive(tempX, tempY))
         	livingNeighbors++;
