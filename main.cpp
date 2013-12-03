@@ -76,20 +76,29 @@ int q = 60;
 
 float f(int i, int j)
 {
-  return((R+r*cos((-1+2*(float)j/q)*M_PI))*cos((-1+2*(float)i/p)*M_PI));
+  if(mode==2)
+    return((R+r*cos((-1+2*(float)j/q)*M_PI))*cos((-1+2*(float)i/p)*M_PI));
+  else if(mode==3)
+    return (R*cos(2*(float)j/q*M_PI)*cos(2*(float)i/p*M_PI));
 }
 
 float g(int i, int j)
 {
-  return((R+r*cos((-1+2*(float)j/q)*M_PI))*sin((-1+2*(float)i/p)*M_PI));
+  if(mode==2)
+    return((R+r*cos((-1+2*(float)j/q)*M_PI))*sin((-1+2*(float)i/p)*M_PI));
+  else if(mode==3)
+    return (R*sin(2*(float)j/q*M_PI));
 }
 
 float h(int i, int j)
 {
-  return(r*sin((-1+2*(float)j/q)*M_PI));
+  if(mode==2)
+    return(r*sin((-1+2*(float)j/q)*M_PI));
+  else if(mode==3)
+    return (R*cos(2*(float)j/q*M_PI)*sin(2*(float)i/p*M_PI));
 }
 
-void fillTorusVertices(void)
+void fillVertices(void)
 {
   int i,j,k;
   k=0;
@@ -102,7 +111,7 @@ void fillTorusVertices(void)
       }
 }
 
-void fillTorusTexCoords(void)
+void fillTexCoords(void)
 {
   int i,j,k;
 
@@ -172,7 +181,7 @@ void killCell(int cellX, int cellY)
 // Check if a cell on the active board is alive (if its color is not white)
 bool cellIsAlive(int cellX, int cellY)
 {
-  return colors[activeBoard][cellX][cellY][0] || colors[activeBoard][cellX][cellY][1] || colors[activeBoard][cellX][cellY][0];
+  return colors[activeBoard][cellX][cellY][0] || colors[activeBoard][cellX][cellY][1] || colors[activeBoard][cellX][cellY][2];
 }
 
 // Click calls this to set colors of cells on the active board
@@ -409,7 +418,7 @@ void drawScene(void)
     glTexCoord2f(0.0, 1.0); glVertex3f(-49, 49.0, 0.0);
     glEnd();
   }
-  else if(mode == 2)
+  else if(mode >= 2)
     {
       fillTex();
       glBindTexture(GL_TEXTURE_2D, texture);
@@ -419,8 +428,8 @@ void drawScene(void)
       glVertexPointer(3, GL_FLOAT, 0, vertices);
       glTexCoordPointer(2, GL_FLOAT, 0, texCoords);
       
-      fillTorusVertices();
-      fillTorusTexCoords();
+      fillVertices();
+      fillTexCoords();
 
       for(j=0; j<q; ++j)
 	{
@@ -442,7 +451,7 @@ void drawScene(void)
 void setup(void) 
 {
   glEnable(GL_DEPTH_TEST);
-  glEnable(GL_CULL_FACE);
+  //glEnable(GL_CULL_FACE);
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
   // Set background (or clearing) color.
@@ -588,31 +597,57 @@ void keyInput(unsigned char key, int x, int y)
     break;
 
   case ',':
-    glRotatef(2.0,1.0,0.0,0.0);
-    drawScene();
+    if(mode)
+      {
+	glRotatef(2.0,1.0,0.0,0.0);
+	drawScene();
+      }
     break;
   case '.':
-    glRotatef(2.0,0.0,1.0,0.0);
-    drawScene();
+    if(mode)
+      {
+	glRotatef(2.0,0.0,1.0,0.0);
+	drawScene();
+      }
     break;
   case '/':
-    glRotatef(2.0,0.0,0.0,1.0);
-    drawScene();
+    if(mode)
+      {
+	glRotatef(2.0,0.0,0.0,1.0);
+	drawScene();
+      }
     break;
 
  case '<':
-    glRotatef(-2.0,1.0,0.0,0.0);
-    drawScene();
+   if(mode)
+     {
+       glRotatef(-2.0,1.0,0.0,0.0);
+       drawScene();
+     }
     break;
   case '>':
-    glRotatef(-2.0,0.0,1.0,0.0);
-    drawScene();
+    if(mode)
+      {
+	glRotatef(-2.0,0.0,1.0,0.0);
+	drawScene();
+      }
     break;
   case '?':
-    glRotatef(-2.0,0.0,0.0,1.0);
-    drawScene();
+    if(mode)
+      {
+	glRotatef(-2.0,0.0,0.0,1.0);
+	drawScene();
+      }
     break;
 
+  case '3':
+    mode=3;
+    xWrapMode=2;
+    yWrapMode=2;
+    glLoadIdentity();
+    glTranslatef(50.0,50.0,-50.0);
+    drawScene();
+    break;
   case '2':
     mode = 2;
     xWrapMode = 1;
