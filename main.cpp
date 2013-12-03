@@ -76,12 +76,12 @@ int q = 60;
 
 float f(int i, int j)
 {
-  return((R+r*cos((-1+2*(float)j/q)*M_PI))*cos((-1+2*(float)i/p)*M_PI)+50);
+  return((R+r*cos((-1+2*(float)j/q)*M_PI))*cos((-1+2*(float)i/p)*M_PI));
 }
 
 float g(int i, int j)
 {
-  return((R+r*cos((-1+2*(float)j/q)*M_PI))*sin((-1+2*(float)i/p)*M_PI)+50);
+  return((R+r*cos((-1+2*(float)j/q)*M_PI))*sin((-1+2*(float)i/p)*M_PI));
 }
 
 float h(int i, int j)
@@ -403,10 +403,10 @@ void drawScene(void)
     glBindTexture(GL_TEXTURE_2D, texture);
 
     glBegin(GL_POLYGON);
-    glTexCoord2f(0.0, 0.0); glVertex3f(1.0, 1.0, 0.0);
-    glTexCoord2f(1.0, 0.0); glVertex3f(99.0, 1.0, 0.0);
-    glTexCoord2f(1.0, 1.0); glVertex3f(99.0, 99.0, 0.0);
-    glTexCoord2f(0.0, 1.0); glVertex3f(1.0, 99.0, 0.0);
+    glTexCoord2f(0.0, 0.0); glVertex3f(-49.0, -49.0, 0.0);
+    glTexCoord2f(1.0, 0.0); glVertex3f(49.0, -49.0, 0.0);
+    glTexCoord2f(1.0, 1.0); glVertex3f(49.0, 49.0, 0.0);
+    glTexCoord2f(0.0, 1.0); glVertex3f(-49, 49.0, 0.0);
     glEnd();
   }
   else if(mode == 2)
@@ -432,6 +432,8 @@ void drawScene(void)
 	    }
 	  glEnd();
 	}
+      free(vertices);
+      free(texCoords);
     }
   glutSwapBuffers();   
 }
@@ -440,6 +442,7 @@ void drawScene(void)
 void setup(void) 
 {
   glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
   // Set background (or clearing) color.
@@ -465,7 +468,7 @@ void resize(int w, int h)
 
   // Specify the orthographic (or perpendicular) projection, 
   // i.e., define the viewing box.
-  glOrtho(0.0, 100.0, 0.0, 100.0, -100.0, 100.0);
+  glOrtho(0.0, 100.0, 0.0, 100.0, -40.0, 140.0);
 
   // Set matrix mode to modelview.
   glMatrixMode(GL_MODELVIEW);
@@ -584,22 +587,53 @@ void keyInput(unsigned char key, int x, int y)
     isStepping = !isStepping;
     break;
 
+  case ',':
+    glRotatef(2.0,1.0,0.0,0.0);
+    drawScene();
+    break;
+  case '.':
+    glRotatef(2.0,0.0,1.0,0.0);
+    drawScene();
+    break;
+  case '/':
+    glRotatef(2.0,0.0,0.0,1.0);
+    drawScene();
+    break;
+
+ case '<':
+    glRotatef(-2.0,1.0,0.0,0.0);
+    drawScene();
+    break;
+  case '>':
+    glRotatef(-2.0,0.0,1.0,0.0);
+    drawScene();
+    break;
+  case '?':
+    glRotatef(-2.0,0.0,0.0,1.0);
+    drawScene();
+    break;
+
   case '2':
     mode = 2;
     xWrapMode = 1;
     yWrapMode = 1;
+    glLoadIdentity();
+    glTranslatef(50.0,50.0,-50.0);
     drawScene();
     break;
   case '1':
     mode = 1;
     xWrapMode = 0;
     yWrapMode = 0;
+    glLoadIdentity();
+    glTranslatef(50.0,50.0,-50.0);
     drawScene();
     break;
   case '0':
     mode = 0;
     xWrapMode = 0;
     yWrapMode = 0;
+    glLoadIdentity();
     drawScene();
     break;
     }
