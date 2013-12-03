@@ -62,7 +62,7 @@ int windowHeight = 600;
 unsigned int xSquares = 16;
 unsigned int ySquares = 16;
 unsigned int TEX_SQUARE_WIDTH = 4;
-unsigned int TEX_SAMPLE_TYPE = GL_LINEAR;
+unsigned int TEX_SAMPLE_TYPE = GL_NEAREST;
 
 //use these for drawing the more complex figures
 float* vertices = NULL;
@@ -79,7 +79,7 @@ float f(int i, int j)
   if(mode==2)
     return((R+r*cos((-1+2*(float)j/q)*M_PI))*cos((-1+2*(float)i/p)*M_PI));
   else if(mode==3)
-    return (R*cos(2*(float)j/q*M_PI)*cos(2*(float)i/p*M_PI));
+    return (R*sin(j*M_PI/q)*cos(2*i*M_PI/p));
 }
 
 float g(int i, int j)
@@ -87,7 +87,7 @@ float g(int i, int j)
   if(mode==2)
     return((R+r*cos((-1+2*(float)j/q)*M_PI))*sin((-1+2*(float)i/p)*M_PI));
   else if(mode==3)
-    return (R*sin(2*(float)j/q*M_PI));
+    return (R*sin(j*M_PI/q)*sin(2*i*M_PI/p));
 }
 
 float h(int i, int j)
@@ -95,7 +95,7 @@ float h(int i, int j)
   if(mode==2)
     return(r*sin((-1+2*(float)j/q)*M_PI));
   else if(mode==3)
-    return (R*cos(2*(float)j/q*M_PI)*sin(2*(float)i/p*M_PI));
+    return (R*cos(j*M_PI/q));
 }
 
 void fillVertices(void)
@@ -135,7 +135,7 @@ void fillTex()
     {
       tex = (unsigned char*)malloc(tex_size);
     }
-  else if(sizeof(tex) != tex_size)
+  else
     {
       free(tex);
       tex = (unsigned char*)malloc(tex_size);
